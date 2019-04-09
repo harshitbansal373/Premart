@@ -1,0 +1,95 @@
+<h2>REGISTER A NEW USER</h2>
+<hr>
+
+<?php
+if(isset($_POST['create_user'])){
+    $username = $_POST['username'];
+    $mobile = $_POST['mobile'];
+    $user_role = $_POST['user_role'];
+    $user_email = $_POST['user_email'];
+    $user_password = $_POST['user_password'];
+ 
+
+    // $post_image = $_FILES['post_image']['name'];
+    // $post_temp_image = $_FILES['post_image']['tmp_name'];
+    
+    // $location = "../images/$post_image";
+    // move_uploaded_file($post_temp_image,$location);
+
+    if(!empty($username) && !empty($user_email) && !empty($user_password)){
+        $username = mysqli_real_escape_string($connection,$username);
+        $mobile = mysqli_real_escape_string($connection,$mobile);
+        $user_email = mysqli_real_escape_string($connection,$user_email);
+        $user_password = mysqli_real_escape_string($connection,$user_password);
+
+        $user_password = password_hash($user_password, PASSWORD_BCRYPT, array('cost' => 12));
+
+        $query = "SELECT user_email FROM users WHERE user_email = '{$user_email}' ";
+        $user_exist_query = mysqli_query($connection,$query);
+        $count_user_exist = mysqli_num_rows($user_exist_query);
+
+        if($count_user_exist==0){
+            $query = "INSERT INTO users(user_role,username,mobile,user_email,user_password) ";
+            $query .= "VALUES(?,?,?,?,?,?)";
+            $stmt_create_user_query = mysqli_prepare($connection,$query);
+            mysqli_stmt_bind_param($stmt_create_user_query,"ssssss",$user_role,$username,$mobile,$user_email,$user_password);
+            mysqli_stmt_execute($stmt_create_user_query);
+            mysqli_stmt_close($stmt_create_user_query);
+            confirm_query($stmt_create_user_query);
+
+            $add_user_message = 'Your Registration has been submitted <a href="users.php">View here</a><br>';
+        }else{
+            $user_exist_message = 'You are Already exist!!!';
+        }
+
+    }else{
+        $message = "fields cannot be empty";
+    }
+
+}else{
+    $message = "";
+}
+
+?>
+
+<div class="col-sm-5">
+    <form action="" method="POST" enctype="multipart/form-data">
+        <h6><?php if(isset($add_user_message)){echo $add_user_message;} ?></h6>
+        <h6><?php if(isset($message)){echo $message;} ?></h6>
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" class="form-control" name="username" >
+        </div>
+        
+        <div class="form-group">
+            Mobile Number
+            <input type="text" name="mobile" id="mobile" class="form-control" pattern="[1-9]{1}[0-9]{9}" title="Invalid Mobile No.">
+        </div>
+        
+        <div class="form-group">
+            <label for="user_role">Role</label><br>
+            <select name="user_role" id="">    
+                <option value="">select option</option>
+                <option value="admin">Admin</option>
+                <option value="customer">Customer</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="user_email">Email</label>
+            <input type="email" class="form-control" name="user_email" >
+            <h6 class="text-danger ml-3"><?php if(isset($user_exist_message)){echo $user_exist_message;} ?></h6>
+        </div>
+        <!-- <div class="form-group">
+            <label for="post_image">Post Image</label>
+            <input type="file" class="form-control-file" name="post_image">
+        </div> -->
+        <div class="form-group">
+            <label for="user_password">Password</label>
+            <input type="password" class="form-control" name="user_password" >
+        </div>
+        <div class="form-group">
+            <input type="submit" class="btn btn-primary " name="create_user" value="Add user" >
+        </div>
+    </form>
+</div>
